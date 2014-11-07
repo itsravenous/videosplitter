@@ -17,11 +17,17 @@ class FormWidget(QWidget):
 
 	def __layout(self):
 		self.vbox = QVBoxLayout()
-		
-		self.logText = QTextEdit();
+
+		self.toolbar = QToolBar();
+		self.toolbar.addAction(QIcon.fromTheme('list-add'), 'Add Videos')
+		self.toolbar.addAction(QIcon.fromTheme('edit-clear'), 'Clear Video List')
+		self.help = QLabel('Welcome to Video Splitter. To get started, add videos to the list using the button above.')
 		self.fileListView = QListView()
+		self.logText = QTextEdit();
 		self.button = QPushButton('Split videos into frames')
 
+		self.vbox.addWidget(self.toolbar)
+		self.vbox.addWidget(self.help)
 		self.vbox.addWidget(self.fileListView)
 		self.vbox.addWidget(self.logText)
 		self.vbox.addWidget(self.button)
@@ -32,37 +38,38 @@ class VideoSplitter(QMainWindow):
 
 	def __init__(self):
 		super(VideoSplitter, self).__init__()
-		
+
 		self.initUI()
-		
-	def initUI(self):      
+
+	def initUI(self):
 
 		self.layout = FormWidget(self)
 
 		self.layout.button.clicked.connect(self.doSplitting)
+		self.layout.toolbar.actionTriggered.connect(self.actionClicked)
 
 		self.setCentralWidget(self.layout)
 		self.statusBar()
 
-		openFile = QAction(QIcon('open.png'), 'Open', self)
-		openFile.setShortcut('Ctrl+O')
-		openFile.setStatusTip('Open new File')
-		openFile.triggered.connect(self.showDialog)
-
-		menubar = self.menuBar()
-		fileMenu = menubar.addMenu('&File')
-		fileMenu.addAction(openFile)
-		
 		self.setGeometry(450, 100, 800, 700)
 		self.setWindowTitle('Video Splitter')
 		self.show()
 
-		
+	def actionClicked(self, action):
+		a = action.text()
+		if a == 'Add Videos':
+			self.showDialog()
+		elif a == 'Clear Video List':
+			self.clearList()
+
+	def clearList(self):
+		self.model.clear()
+
 	def showDialog(self):
 
 		fnames = QFileDialog.getOpenFileNames(self, 'Open file', os.environ['HOME'])
 		self.model = QStandardItemModel()
-		
+
 		self.fileCount = 0
 		for fname in fnames:
 			item = QStandardItem()
@@ -76,7 +83,16 @@ class VideoSplitter(QMainWindow):
 
 	def doSplitting(self):
 		for i in range(0, self.fileCount):
-			f = self.model.item(i).text()
+			f = self.model.item(i)
+
+			if f.checkState() != 2:
+				continue;
+
+			fin = f.text()
+
+			fname = '%s-image%%03d.jpg' % fin
+
+			print fname
 
 			# QProcess object for external ffmpeg/avconv command
 	        self.process = QProcess(self)
@@ -88,15 +104,21 @@ class VideoSplitter(QMainWindow):
 	        self.process.readyReadStandardOutput.connect(self.writeLog)
 	        self.process.readyReadStandardError.connect(self.writeLog)
 
-	        self.process.start('avconv', ['-i', f, '-r', '1', 'image%03d.jpg'])
+	        self.process.start('avconv', ['-i', fin, '-r', '1', fname])
 
 	def writeLog(self):
 		self.layout.logText.append(str(self.process.readAllStandardOutput()))
 		self.layout.logText.append(str(self.process.readAllStandardError()))
 
+	def confirmQuit(self):
+		self.quit()
+
+	def quit(self):
+		sys.exit()
+
 
 def main():
-	
+
 	app = QApplication(sys.argv)
 	ex = VideoSplitter()
 	sys.exit(app.exec_())
