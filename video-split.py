@@ -105,8 +105,7 @@ class VideoSplitter(QMainWindow):
 
 			outdir = os.path.join(finDir, '%s-frames' % fin)
 			fname = os.path.join(outdir, 'image%03d.jpg')
-			print outdir
-			print fname
+
 			if not os.path.isdir(outdir):
 				try:
 					os.mkdir(outdir)
