@@ -114,8 +114,6 @@ class VideoSplitter(QMainWindow):
 						self.showPermissionDialog()
 						raise
 
-			print fname
-
 			# QProcess object for external ffmpeg/avconv command
 			self.process = QProcess(self)
 			# Just to prevent accidentally running multiple times
@@ -133,12 +131,10 @@ class VideoSplitter(QMainWindow):
 
 	def finishedSplit(self):
 		self.completionCount += 1
-		print self.completionCount
-		print self.model.rowCount()
 		if (self.completionCount >= self.model.rowCount()):
 			self.dialog.setIcon(1)
 			self.dialog.setWindowTitle('Splitting finished')
-			self.dialog.setText('All videos have been split into frames. The frames have been exported into a subfolder in each video\'s original folder')
+			self.dialog.setText('All videos have been split into frames. The frames have been exported into a subfolder in each video\'s original folder. If you can\'t see some/any frames, or have any other problems, check the log output below, and feel free to raise an issue at https://github.com/itsravenous/videosplitter/issues')
 			self.dialog.open()
 			self.layout.button.setEnabled(True)
 
