@@ -18,7 +18,7 @@ class FormWidget(QWidget):
 	def __layout(self):
 		self.vbox = QVBoxLayout()
 
-		self.toolbar = QToolBar();
+		self.toolbar = QToolBar()
 		self.toolbar.addAction(QIcon.fromTheme('list-add'), 'Add Videos')
 		self.toolbar.addAction(QIcon.fromTheme('edit-clear'), 'Clear Video List')
 		self.help = QLabel('Welcome to Video Splitter. To get started, add videos to the list using the button above.')
@@ -28,16 +28,34 @@ class FormWidget(QWidget):
 		self.fps.setMinimum(1);
 		self.fps.setMaximum(200);
 		self.fps.setValue(5);
+		self.outdirLabel = QLabel('Output folder (where to create the frame folders for each video)')
+		self.outdirLayout = QHBoxLayout()
+		self.outdirInput = QLineEdit()
+		self.outdirInput.setText(os.environ['HOME'])
+		self.outdirButton = QPushButton('Browse')
+		self.outdirLayout.addWidget(self.outdirInput)
+		self.outdirLayout.addWidget(self.outdirButton)
 		self.button = QPushButton('Split videos into frames')
-		self.logTextLabel = QLabel('Conversion information');
-		self.logText = QTextEdit();
+		self.logTextLabel = QLabel('Debug information')
+
+		pal = QPalette()
+		bgc = QColor(0, 0, 0)
+		pal.setColor(QPalette.Base, bgc)
+		textc = QColor(255, 255, 255)
+		pal.setColor(QPalette.Text, textc)
+		self.logText = QTextEdit()
+		self.logText.setReadOnly(True)
+		self.logText.setPalette(pal)
 
 		self.vbox.addWidget(self.toolbar)
 		self.vbox.addWidget(self.help)
 		self.vbox.addWidget(self.fileListView)
 		self.vbox.addWidget(self.fpsLabel)
 		self.vbox.addWidget(self.fps)
+		self.vbox.addWidget(self.outdirLabel)
+		self.vbox.addLayout(self.outdirLayout)
 		self.vbox.addWidget(self.button)
+		self.vbox.addWidget(self.logTextLabel)
 		self.vbox.addWidget(self.logText)
 		self.setLayout(self.vbox)
 
@@ -56,10 +74,14 @@ class VideoSplitter(QMainWindow):
 		self.layout.button.clicked.connect(self.doSplitting)
 		self.layout.toolbar.actionTriggered.connect(self.actionClicked)
 
+		self.layout.outdirButton.clicked.connect(self.showOutputDialog)
+
 		self.setCentralWidget(self.layout)
 		self.statusBar()
 
 		self.dialog = QMessageBox()
+
+		self.outdir = os.environ['HOME'];
 
 		self.setGeometry(450, 100, 800, 700)
 		self.setWindowTitle('Video Splitter')
@@ -68,14 +90,18 @@ class VideoSplitter(QMainWindow):
 	def actionClicked(self, action):
 		a = action.text()
 		if a == 'Add Videos':
-			self.showDialog()
+			self.showFileDialog()
 		elif a == 'Clear Video List':
 			self.clearList()
 
 	def clearList(self):
 		self.model.clear()
 
-	def showDialog(self):
+	def showOutputDialog(self):
+		self.outdir = str(QFileDialog.getExistingDirectory(self, 'Choose output folder for video frames', os.environ['HOME']))
+		self.layout.outdirInput.setText(self.outdir)
+
+	def showFileDialog(self):
 
 		fnames = QFileDialog.getOpenFileNames(self, 'Open file', os.environ['HOME'])
 		self.model = QStandardItemModel()
@@ -101,9 +127,8 @@ class VideoSplitter(QMainWindow):
 				continue;
 
 			fin = str(f.text())
-			finDir = os.path.dirname(os.path.abspath(fin))
-
-			outdir = os.path.join(finDir, '%s-frames' % fin)
+			print os.path.basename(fin)
+			outdir = os.path.join(self.outdir, os.path.basename(fin) + '-frames')
 			fname = os.path.join(outdir, 'image%03d.jpg')
 
 			if not os.path.isdir(outdir):
@@ -134,7 +159,7 @@ class VideoSplitter(QMainWindow):
 		if (self.completionCount >= self.model.rowCount()):
 			self.dialog.setIcon(1)
 			self.dialog.setWindowTitle('Splitting finished')
-			self.dialog.setText('All videos have been split into frames. The frames have been exported into a subfolder in each video\'s original folder. If you can\'t see some/any frames, or have any other problems, check the log output below, and feel free to raise an issue at https://github.com/itsravenous/videosplitter/issues')
+			self.dialog.setText('All videos have been split into frames. The frames have been exported into the output folder you chose, with a sub-folder for each video. If you can\'t see some/any frames, or have any other problems, check the log output below, and feel free to raise an issue at https://github.com/itsravenous/videosplitter/issues')
 			self.dialog.open()
 			self.layout.button.setEnabled(True)
 
