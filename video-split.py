@@ -23,14 +23,22 @@ class FormWidget(QWidget):
 		self.toolbar.addAction(QIcon.fromTheme('edit-clear'), 'Clear Video List')
 		self.help = QLabel('Welcome to Video Splitter. To get started, add videos to the list using the button above.')
 		self.fileListView = QListView()
-		self.logText = QTextEdit();
+		self.fpsLabel = QLabel('Frames Per Second (play around to find a balance between capturing best poses and number of frames exported).')
+		self.fps = QSpinBox()
+		self.fps.setMinimum(1);
+		self.fps.setMaximum(200);
+		self.fps.setValue(5);
 		self.button = QPushButton('Split videos into frames')
+		self.logTextLabel = QLabel('Conversion information');
+		self.logText = QTextEdit();
 
 		self.vbox.addWidget(self.toolbar)
 		self.vbox.addWidget(self.help)
 		self.vbox.addWidget(self.fileListView)
-		self.vbox.addWidget(self.logText)
+		self.vbox.addWidget(self.fpsLabel)
+		self.vbox.addWidget(self.fps)
 		self.vbox.addWidget(self.button)
+		self.vbox.addWidget(self.logText)
 		self.setLayout(self.vbox)
 
 
@@ -51,7 +59,7 @@ class VideoSplitter(QMainWindow):
 		self.setCentralWidget(self.layout)
 		self.statusBar()
 
-		self.errorDialog = QMessageBox(2, 'Can\'t write frames', 'The folder in which one or more of your videos resides is not writeable. Please check you own the folder, and it is not read-only.')
+		self.dialog = QMessageBox()
 
 		self.setGeometry(450, 100, 800, 700)
 		self.setWindowTitle('Video Splitter')
@@ -84,18 +92,21 @@ class VideoSplitter(QMainWindow):
 		self.layout.fileListView.setModel(self.model)
 
 	def doSplitting(self):
+		self.completionCount = 0
+
 		for i in range(0, self.fileCount):
 			f = self.model.item(i)
 
 			if f.checkState() != 2:
 				continue;
 
-			fin = f.text()
+			fin = str(f.text())
+			finDir = os.path.dirname(os.path.abspath(fin))
 
-			outdir = str(fin)+'-frames'
-			fname = '%s-image%%03d.jpg' % fin
+			outdir = os.path.join(finDir, '%s-frames' % fin)
+			fname = os.path.join(outdir, 'image%03d.jpg')
 			print outdir
-			print os.path.isdir(outdir)
+			print fname
 			if not os.path.isdir(outdir):
 				try:
 					os.mkdir(outdir)
@@ -110,16 +121,33 @@ class VideoSplitter(QMainWindow):
 			self.process = QProcess(self)
 			# Just to prevent accidentally running multiple times
 			# Disable the button when process starts, and enable it when it finishes
-			self.process.started.connect(lambda: self.layout.button.setEnabled(False))
-			self.process.finished.connect(lambda: self.layout.button.setEnabled(True))
+			self.process.started.connect(self.startedSplit)
+			self.process.finished.connect(self.finishedSplit)
 			# QProcess emits signals when there is output to be read
 			self.process.readyReadStandardOutput.connect(self.writeLog)
 			self.process.readyReadStandardError.connect(self.writeLog)
 
-			self.process.start('avconv', ['-i', fin, '-r', '1', os.path.join(outdir, fname)])
+			self.process.start('avconv', ['-i', fin, '-r', self.layout.fps.text(), fname])
+
+	def startedSplit(self):
+		self.layout.button.setEnabled(False)
+
+	def finishedSplit(self):
+		self.completionCount += 1
+		print self.completionCount
+		print self.model.rowCount()
+		if (self.completionCount >= self.model.rowCount()):
+			self.dialog.setIcon(1)
+			self.dialog.setWindowTitle('Splitting finished')
+			self.dialog.setText('All videos have been split into frames. The frames have been exported into a subfolder in each video\'s original folder')
+			self.dialog.open()
+			self.layout.button.setEnabled(True)
 
 	def showPermissionDialog(self):
-		self.errorDialog.show()
+		self.dialog.setIcon(2)
+		self.dialog.setWindowTitle('Can\'t write frames')
+		self.dialog.setText('The folder in which one or more of your videos resides is not writeable. Please check you own the folder, and it is not read-only.')
+		self.dialog.open()
 
 	def writeLog(self):
 		self.layout.logText.append(str(self.process.readAllStandardOutput()))
