@@ -51,6 +51,8 @@ class VideoSplitter(QMainWindow):
 		self.setCentralWidget(self.layout)
 		self.statusBar()
 
+		self.errorDialog = QMessageBox(2, 'Can\'t write frames', 'The folder in which one or more of your videos resides is not writeable. Please check you own the folder, and it is not read-only.')
+
 		self.setGeometry(450, 100, 800, 700)
 		self.setWindowTitle('Video Splitter')
 		self.show()
@@ -90,21 +92,34 @@ class VideoSplitter(QMainWindow):
 
 			fin = f.text()
 
+			outdir = str(fin)+'-frames'
 			fname = '%s-image%%03d.jpg' % fin
+			print outdir
+			print os.path.isdir(outdir)
+			if not os.path.isdir(outdir):
+				try:
+					os.mkdir(outdir)
+				except OSError:
+					if not os.path.isdir(outdir):
+						self.showPermissionDialog()
+						raise
 
 			print fname
 
 			# QProcess object for external ffmpeg/avconv command
-	        self.process = QProcess(self)
-	        # Just to prevent accidentally running multiple times
-	        # Disable the button when process starts, and enable it when it finishes
-	        self.process.started.connect(lambda: self.layout.button.setEnabled(False))
-	        self.process.finished.connect(lambda: self.layout.button.setEnabled(True))
-	        # QProcess emits signals when there is output to be read
-	        self.process.readyReadStandardOutput.connect(self.writeLog)
-	        self.process.readyReadStandardError.connect(self.writeLog)
+			self.process = QProcess(self)
+			# Just to prevent accidentally running multiple times
+			# Disable the button when process starts, and enable it when it finishes
+			self.process.started.connect(lambda: self.layout.button.setEnabled(False))
+			self.process.finished.connect(lambda: self.layout.button.setEnabled(True))
+			# QProcess emits signals when there is output to be read
+			self.process.readyReadStandardOutput.connect(self.writeLog)
+			self.process.readyReadStandardError.connect(self.writeLog)
 
-	        self.process.start('avconv', ['-i', fin, '-r', '1', fname])
+			self.process.start('avconv', ['-i', fin, '-r', '1', os.path.join(outdir, fname)])
+
+	def showPermissionDialog(self):
+		self.errorDialog.show()
 
 	def writeLog(self):
 		self.layout.logText.append(str(self.process.readAllStandardOutput()))
