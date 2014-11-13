@@ -84,7 +84,7 @@ class VideoSplitter(QMainWindow):
 		self.outdir = getHome() + '/Video Split Frames';
 
 		self.setGeometry(450, 100, 800, 700)
-		self.setWindowTitle('Video Splitter')
+		self.setWindowTitle('Video Split by Ravenous')
 		self.show()
 
 	def actionClicked(self, action):
