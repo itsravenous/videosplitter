@@ -31,7 +31,7 @@ class FormWidget(QWidget):
 		self.outdirLabel = QLabel('Output folder (where to create the frame folders for each video)')
 		self.outdirLayout = QHBoxLayout()
 		self.outdirInput = QLineEdit()
-		self.outdirInput.setText(os.environ['HOME'])
+		self.outdirInput.setText(getHome())
 		self.outdirButton = QPushButton('Browse')
 		self.outdirLayout.addWidget(self.outdirInput)
 		self.outdirLayout.addWidget(self.outdirButton)
@@ -81,7 +81,7 @@ class VideoSplitter(QMainWindow):
 
 		self.dialog = QMessageBox()
 
-		self.outdir = os.environ['HOME'];
+		self.outdir = getHome();
 
 		self.setGeometry(450, 100, 800, 700)
 		self.setWindowTitle('Video Splitter')
@@ -98,12 +98,12 @@ class VideoSplitter(QMainWindow):
 		self.model.clear()
 
 	def showOutputDialog(self):
-		self.outdir = str(QFileDialog.getExistingDirectory(self, 'Choose output folder for video frames', os.environ['HOME']))
+		self.outdir = str(QFileDialog.getExistingDirectory(self, 'Choose output folder for video frames', getHome()))
 		self.layout.outdirInput.setText(self.outdir)
 
 	def showFileDialog(self):
 
-		fnames = QFileDialog.getOpenFileNames(self, 'Open file', os.environ['HOME'])
+		fnames = QFileDialog.getOpenFileNames(self, 'Open file', getHome())
 		self.model = QStandardItemModel()
 
 		self.fileCount = 0
@@ -179,6 +179,27 @@ class VideoSplitter(QMainWindow):
 	def quit(self):
 		sys.exit()
 
+
+def getHome():
+	homedir = os.path.expanduser('~')
+	# ...works on at least windows and linux.
+	# In windows it points to the user's folder
+	# (the one directly under Documents and Settings, not My Documents)
+
+	# In windows, you can choose to care about local versus roaming profiles.
+	# You can fetch the current user's through PyWin32.
+	#
+	# For example, to ask for the roaming 'Application Data' directory:
+	# (CSIDL_APPDATA asks for the roaming, CSIDL_LOCAL_APPDATA for the local one)
+	# (See microsoft references for further CSIDL constants)
+	try:
+		from win32com.shell import shellcon, shell
+		homedir = shell.SHGetFolderPath(0, shellcon.CSIDL_APPDATA, 0, 0)
+
+	except ImportError: # quick semi-nasty fallback for non-windows/win32com case
+		homedir = os.path.expanduser("~")
+
+	return homedir
 
 def main():
 
