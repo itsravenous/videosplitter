@@ -31,6 +31,7 @@ class FormWidget(QWidget):
 		self.outdirLabel = QLabel('Output folder (where to create the frame folders for each video)')
 		self.outdirLayout = QHBoxLayout()
 		self.outdirInput = QLineEdit()
+		self.outdirInput.setReadOnly(True)
 		self.outdirInput.setText(getHome())
 		self.outdirButton = QPushButton('Browse')
 		self.outdirLayout.addWidget(self.outdirInput)
