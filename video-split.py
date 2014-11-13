@@ -81,7 +81,7 @@ class VideoSplitter(QMainWindow):
 
 		self.dialog = QMessageBox()
 
-		self.outdir = getHome();
+		self.outdir = getHome() + '/Video Split Frames';
 
 		self.setGeometry(450, 100, 800, 700)
 		self.setWindowTitle('Video Splitter')
@@ -100,6 +100,8 @@ class VideoSplitter(QMainWindow):
 	def showOutputDialog(self):
 		self.outdir = str(QFileDialog.getExistingDirectory(self, 'Choose output folder for video frames', getHome()))
 		self.layout.outdirInput.setText(self.outdir)
+		self.outdir = self.outdir + '/Video Split Frames'
+		print self.outdir
 
 	def showFileDialog(self):
 
@@ -119,6 +121,15 @@ class VideoSplitter(QMainWindow):
 
 	def doSplitting(self):
 		self.completionCount = 0
+
+		# Ensure base output dir
+		if not os.path.isdir(self.outdir):
+			try:
+				os.mkdir(self.outdir)
+			except OSError:
+				if not os.path.isdir(self.outdir):
+					self.showPermissionDialog()
+					raise
 
 		for i in range(0, self.fileCount):
 			f = self.model.item(i)
@@ -159,14 +170,37 @@ class VideoSplitter(QMainWindow):
 		if (self.completionCount >= self.model.rowCount()):
 			self.dialog.setIcon(1)
 			self.dialog.setWindowTitle('Splitting finished')
-			self.dialog.setText('All videos have been split into frames. The frames have been exported into the output folder you chose, with a sub-folder for each video. If you can\'t see some/any frames, or have any other problems, check the log output below, and feel free to raise an issue at https://github.com/itsravenous/videosplitter/issues')
+			self.dialog.setText('All videos have been split into frames. The frames have been exported into a new folder in the output folder you chose, with a sub-folder for each video. If you can\'t see some/any frames, or have any other problems, check the log output below, and feel free to raise an issue at https://github.com/itsravenous/videosplitter/issues')
+			self.dialog.setButtonText(1, 'Show Frames')
+
+			try:
+				self.dialog.buttonClicked.disconnect()
+			except Exception:
+				pass
+
+			self.dialog.buttonClicked.connect(self.showFrames)
 			self.dialog.open()
 			self.layout.button.setEnabled(True)
+
+	def showFrames(self, button):
+		if sys.platform.startswith('darwin'):
+			subprocess.call(('open', self.outdir))
+		elif os.name == 'nt':
+			os.startfile(self.outdir)
+		elif os.name == 'posix':
+			subprocess.call(('xdg-open', self.outdir))
 
 	def showPermissionDialog(self):
 		self.dialog.setIcon(2)
 		self.dialog.setWindowTitle('Can\'t write frames')
 		self.dialog.setText('The folder in which one or more of your videos resides is not writeable. Please check you own the folder, and it is not read-only.')
+		self.dialog.setButtonText(1, 'OK')
+
+		try:
+			self.dialog.buttonClicked.disconnect()
+		except Exception:
+			pass
+
 		self.dialog.open()
 
 	def writeLog(self):
