@@ -139,7 +139,7 @@ class VideoSplitter(QMainWindow):
 						self.showPermissionDialog()
 						raise
 
-			# QProcess object for external ffmpeg/avconv command
+			# QProcess object for external ffmpeg command
 			self.process = QProcess(self)
 			# Just to prevent accidentally running multiple times
 			# Disable the button when process starts, and enable it when it finishes
@@ -149,7 +149,7 @@ class VideoSplitter(QMainWindow):
 			self.process.readyReadStandardOutput.connect(self.writeLog)
 			self.process.readyReadStandardError.connect(self.writeLog)
 
-			self.process.start('avconv', ['-i', fin, '-r', self.layout.fps.text(), fname])
+			self.process.start('ffmpeg', ['-i', fin, '-r', self.layout.fps.text(), fname])
 
 	def startedSplit(self):
 		self.layout.button.setEnabled(False)
