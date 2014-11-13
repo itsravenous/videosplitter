@@ -19,3 +19,11 @@ To run on a unix-y platform, make sure you have the following installed:
 * [PyQT](http://www.riverbankcomputing.co.uk/software/pyqt/download)
 
 Obviously check your package manager; most - if not all - of the above should be available via `apt-get`, `yum`, etc.
+
+## Building the Windows installer
+If you're savvy enough to build the installer, you probably don't need this tool. So I'll keep it brief:
+
+1) Install [PyInstaller](http://pyinstaller.org)
+2) Install [Inno Setup](http://www.jrsoftware.org/isdl.php)
+3) Run pyinstaller on video-split.py
+4) Open installer.iss with Inno and compile. The setup exe will be placed in `Output/`.
