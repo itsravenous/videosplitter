@@ -69,6 +69,9 @@ class VideoSplitter(QMainWindow):
 
 	def initUI(self):
 
+		self.fileCount = 0
+                self.model = QStandardItemModel()
+
 		self.layout = FormWidget(self)
 
 		self.layout.button.clicked.connect(self.doSplitting)
@@ -106,9 +109,7 @@ class VideoSplitter(QMainWindow):
 	def showFileDialog(self):
 
 		fnames = QFileDialog.getOpenFileNames(self, 'Open file', getHome())
-		self.model = QStandardItemModel()
 
-		self.fileCount = 0
 		for fname in fnames:
 			item = QStandardItem()
 			item.setText(fname)
