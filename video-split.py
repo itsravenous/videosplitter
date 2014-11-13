@@ -25,9 +25,9 @@ class FormWidget(QWidget):
 		self.fileListView = QListView()
 		self.fpsLabel = QLabel('Frames Per Second (play around to find a balance between capturing best poses and number of frames exported).')
 		self.fps = QSpinBox()
-		self.fps.setMinimum(1);
-		self.fps.setMaximum(200);
-		self.fps.setValue(5);
+		self.fps.setMinimum(1)
+		self.fps.setMaximum(200)
+		self.fps.setValue(5)
 		self.outdirLabel = QLabel('Output folder (where to create the frame folders for each video)')
 		self.outdirLayout = QHBoxLayout()
 		self.outdirInput = QLineEdit()
@@ -81,7 +81,7 @@ class VideoSplitter(QMainWindow):
 
 		self.dialog = QMessageBox()
 
-		self.outdir = getHome() + '/Video Split Frames';
+		self.outdir = getHome() + '/Video Split Frames'
 
 		self.setGeometry(450, 100, 800, 700)
 		self.setWindowTitle('Video Split by Ravenous')
@@ -135,7 +135,7 @@ class VideoSplitter(QMainWindow):
 			f = self.model.item(i)
 
 			if f.checkState() != 2:
-				continue;
+				continue
 
 			fin = str(f.text())
 			print os.path.basename(fin)
