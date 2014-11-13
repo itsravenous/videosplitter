@@ -52,3 +52,10 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# Project-specfic rules
+Output/
+build/
+dist/
+ffmpeg.exe
+
