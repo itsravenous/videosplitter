@@ -19,8 +19,8 @@ class FormWidget(QWidget):
 		self.vbox = QVBoxLayout()
 
 		self.toolbar = QToolBar()
-		self.toolbar.addAction(QIcon.fromTheme('list-add'), 'Add Videos')
-		self.toolbar.addAction(QIcon.fromTheme('edit-clear'), 'Clear Video List')
+		self.toolbar.addAction(QIcon('icons/list-add.png'), 'Add Videos')
+		self.toolbar.addAction(QIcon('icons/editclear.png'), 'Clear Video List')
 		self.help = QLabel('Welcome to Video Splitter. To get started, add videos to the list using the button above.')
 		self.fileListView = QListView()
 		self.fpsLabel = QLabel('Frames Per Second (play around to find a balance between capturing best poses and number of frames exported).')
