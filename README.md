@@ -20,6 +20,13 @@ To run on a unix-y platform, make sure you have the following installed:
 
 Obviously check your package manager; most - if not all - of the above should be available via `apt-get`, `yum`, etc.
 
+You can then:
+
+```
+cd /path/to/video-split/
+python video-split.py
+```
+
 ## Building the Windows installer
 If you're savvy enough to build the installer, you probably don't need this tool. So I'll keep it brief:
 
